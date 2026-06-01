@@ -16,7 +16,29 @@ async function chatWithTools({ message, tools = [], baseUrl = "", apiKey = "", a
     };
   }
 
-  const selectedTool = selectTool(message, availableTools);
+  if (shouldUseLiveChat()) {
+    return chatWithClaude({
+      message,
+      tools: availableTools,
+      baseUrl,
+      apiKey,
+      agentId,
+      preflightTrust
+    });
+  }
+
+  return chatWithDeterministicTool({
+    message,
+    tools: availableTools,
+    baseUrl,
+    apiKey,
+    agentId,
+    preflightTrust
+  });
+}
+
+async function chatWithDeterministicTool({ message, tools, baseUrl, apiKey, agentId, preflightTrust }) {
+  const selectedTool = selectTool(message, tools);
   if (!selectedTool) {
     return {
       reply: "No matching tool was selected. Trust pre-flight passed.",
@@ -48,6 +70,140 @@ async function chatWithTools({ message, tools = [], baseUrl = "", apiKey = "", a
     trust: toolTrust,
     result: execution.result
   };
+}
+
+async function chatWithClaude({ message, tools, baseUrl, apiKey, agentId, preflightTrust }) {
+  try {
+    const Anthropic = require("@anthropic-ai/sdk");
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const claudeTools = tools.map(toClaudeTool);
+    const firstResponse = await client.messages.create({
+      model: process.env.ANTHROPIC_MODEL || "claude-3-5-sonnet-20241022",
+      max_tokens: 800,
+      system: "You are testing generated API tools. Use a tool only when the user request maps clearly to one of the available tools.",
+      messages: [
+        {
+          role: "user",
+          content: message || "Run the most relevant tool."
+        }
+      ],
+      tools: claudeTools,
+      tool_choice: { type: "auto" }
+    });
+
+    const toolUses = (firstResponse.content || []).filter((block) => block.type === "tool_use");
+    if (!toolUses.length) {
+      return {
+        reply: extractText(firstResponse) || "Trust pre-flight passed. Claude did not select a tool.",
+        tool_calls: [],
+        trust: preflightTrust
+      };
+    }
+
+    const toolResults = [];
+    const toolCalls = [];
+    let lastTrust = preflightTrust;
+
+    for (const toolUse of toolUses) {
+      const selectedTool = tools.find((tool) => tool.name === toolUse.name);
+      if (!selectedTool) {
+        continue;
+      }
+
+      const toolTrust = await checkTrust(agentId, selectedTool.trustThreshold || 65);
+      lastTrust = toolTrust;
+      if (!toolTrust.allow) {
+        return {
+          reply: `Blocked before calling ${selectedTool.name}. This tool requires trust score ${selectedTool.trustThreshold}.`,
+          tool_calls: [],
+          trust: toolTrust
+        };
+      }
+
+      const input = toolUse.input || {};
+      const execution = await executeOrMockTool(selectedTool, input, baseUrl, apiKey);
+      toolCalls.push({
+        tool: selectedTool.name,
+        input
+      });
+      toolResults.push({
+        type: "tool_result",
+        tool_use_id: toolUse.id,
+        content: JSON.stringify(execution.result)
+      });
+    }
+
+    if (!toolResults.length) {
+      return {
+        reply: "Claude selected a tool that is not in the generated connector metadata.",
+        tool_calls: [],
+        trust: preflightTrust
+      };
+    }
+
+    const finalResponse = await client.messages.create({
+      model: process.env.ANTHROPIC_MODEL || "claude-3-5-sonnet-20241022",
+      max_tokens: 500,
+      messages: [
+        {
+          role: "user",
+          content: message || "Run the most relevant tool."
+        },
+        {
+          role: "assistant",
+          content: firstResponse.content
+        },
+        {
+          role: "user",
+          content: toolResults
+        }
+      ],
+      tools: claudeTools
+    });
+
+    return {
+      reply: extractText(finalResponse) || "Tool call completed after passing the Valiron trust gate.",
+      tool_calls: toolCalls,
+      trust: lastTrust
+    };
+  } catch (error) {
+    if (process.env.AGENTIFY_CHAT_STRICT === "true") {
+      throw error;
+    }
+
+    return chatWithDeterministicTool({
+      message,
+      tools,
+      baseUrl,
+      apiKey,
+      agentId,
+      preflightTrust
+    });
+  }
+}
+
+function shouldUseLiveChat() {
+  return process.env.AGENTIFY_CHAT_MODE === "live" && Boolean(process.env.ANTHROPIC_API_KEY);
+}
+
+function toClaudeTool(tool) {
+  return {
+    name: tool.name,
+    description: tool.description || `${tool.method} ${tool.endpoint}`,
+    input_schema: tool.input_schema || {
+      type: "object",
+      properties: {},
+      required: []
+    }
+  };
+}
+
+function extractText(response) {
+  return (response.content || [])
+    .filter((block) => block.type === "text")
+    .map((block) => block.text)
+    .join("\n")
+    .trim();
 }
 
 function selectTool(message = "", tools) {
@@ -145,5 +301,7 @@ function parseMaybeJson(text) {
 }
 
 module.exports = {
-  chatWithTools
+  chatWithTools,
+  selectTool,
+  mockInputForTool
 };

@@ -82,6 +82,23 @@ Mock mode can be forced with:
 VITE_USE_MOCKS=true npm run dev
 ```
 
+## One-Command Dev
+
+After installing backend and frontend dependencies:
+
+```bash
+cd agentify
+npm run dev
+```
+
+This starts the backend on `http://localhost:3001` and the frontend on `http://127.0.0.1:5173`.
+
+Run all local checks from `agentify`:
+
+```bash
+npm run check
+```
+
 ## Smoke Test
 
 From `agentify/backend`:
