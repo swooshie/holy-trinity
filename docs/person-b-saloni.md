@@ -143,3 +143,52 @@ Acceptance criteria:
 - Chat proxy returns agreed shape.
 - Real and fallback trust modes are documented.
 - Shreyam has the backend URL and route examples.
+
+## Implementation Status (June 1, 2026)
+
+Current status of Person B scope in this repository:
+
+- B0.1 Stub Backend Routes: Complete
+	- Implemented in `backend/server.js` with all expected routes:
+		- `POST /api/parse`
+		- `POST /api/generate`
+		- `POST /api/chat`
+		- `POST /api/trust-check`
+	- Fixture responses provided by `backend/src/fixtures.js`.
+
+- B0.2 Stub Trust Results: Complete
+	- Deterministic trust behavior implemented in `backend/src/trust.js` when `DEMO_FALLBACK_MODE=true`.
+	- Trusted IDs are configurable with `TRUSTED_AGENT_IDS`.
+
+- B1.1 Backend Route Wiring: Complete
+	- Express + JSON body parsing + CORS implemented in `backend/server.js`.
+	- Route handlers call parse/generate/chat/trust helpers.
+	- Error responses return JSON with `error` field.
+
+- B1.2 Valiron Trust Helper: Complete
+	- `checkTrust(agentId, minScore)` implemented in `backend/src/trust.js`.
+	- Missing `agentId` blocks request.
+	- Real Valiron mode enabled with `DEMO_FALLBACK_MODE=false`.
+	- SDK compatibility supports both modern `gate()` and legacy profile/route methods.
+	- Response includes `allow`, `score`, `tier`, `riskLevel`, `route`, `message`.
+
+- B1.3 Chat Proxy: Complete (initial backend-safe implementation)
+	- `chatWithTools(...)` implemented in `backend/src/chat.js`.
+	- Pre-flight trust check + per-tool trust checks are enforced.
+	- Blocked tools do not execute target API calls.
+	- Returns `reply`, `tool_calls`, and `trust`.
+
+- B2.1 Parser/Generator Integration: Partial
+	- `backend/server.js` dynamically imports `src/parser.js` and `src/generator.js` when fallback mode is off.
+	- Real parser/generator modules must be supplied by Person A for full completion.
+
+- B2.2 Frontend Integration: Pending verification
+	- Backend API is ready for frontend integration.
+	- Full E2E verification with frontend is pending.
+
+- B3.1 Real Demo Agent IDs: Pending
+	- Needs confirmed trusted/untrusted IDs from Valiron playground and test evidence.
+
+- B3.2 Demo Runtime Hardening: Partial
+	- Env template and fallback mode documented in `backend/.env.example` and `backend/README.md`.
+	- Need repeated locked-request reliability tests and full Claude error path hardening.
