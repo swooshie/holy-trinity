@@ -28,6 +28,45 @@ async function post(path, body, fallback) {
   }
 }
 
+async function get(path, fallback) {
+  if (FORCE_MOCKS) {
+    return fallback();
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}${path}`);
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || "Request failed");
+    }
+    return data;
+  } catch (error) {
+    console.warn(`Falling back to mock for ${path}:`, error.message);
+    return fallback();
+  }
+}
+
+export function getDemoStatus() {
+  return get("/api/demo-status", () => ({
+    ok: true,
+    backend: FORCE_MOCKS ? "mocked" : "offline-mock",
+    apiBaseUrl: API_BASE_URL,
+    trustGated: true,
+    fixtureMode: FORCE_MOCKS,
+    trustMode: "deterministic",
+    chatMode: "deterministic",
+    toolExecution: "mock",
+    demoAgents: {
+      trusted: "trusted-agent",
+      untrusted: "untrusted-agent"
+    },
+    missingKeys: {
+      valiron: false,
+      anthropic: false
+    }
+  }));
+}
+
 export function parseSpec(spec) {
   return post("/api/parse", { spec }, () => mockParsedApi);
 }

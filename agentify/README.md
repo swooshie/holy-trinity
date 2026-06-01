@@ -99,11 +99,45 @@ Run all local checks from `agentify`:
 npm run check
 ```
 
+Run backend route smoke tests while the backend is running:
+
+```bash
+npm run smoke
+```
+
 ## Smoke Test
 
 From `agentify/backend`:
 
 ```bash
 npm run check
+npm test
 node -e "const spec=require('../specs/gotogether.openapi.json'); const {parseSpec}=require('./src/parser'); const {generateServer}=require('./src/generator'); parseSpec(spec).then((parsed)=>console.log(generateServer(parsed).trust_config))"
+```
+
+## No-Key Demo Path
+
+No external API keys are required for the default demo.
+
+- Trust checks use deterministic local results.
+- Chat tool selection uses deterministic local behavior.
+- Target API execution is mocked.
+- `trusted-agent` passes.
+- `untrusted-agent` blocks.
+
+Keep these unset or false for the no-key demo:
+
+```bash
+AGENTIFY_TRUST_MODE=deterministic
+AGENTIFY_CHAT_MODE=deterministic
+AGENTIFY_EXECUTE_TOOLS=false
+```
+
+Live integrations can be enabled later by Saloni or whoever owns the keys:
+
+```bash
+VALIRON_API_KEY=...
+ANTHROPIC_API_KEY=...
+AGENTIFY_TRUST_MODE=live
+AGENTIFY_CHAT_MODE=live
 ```

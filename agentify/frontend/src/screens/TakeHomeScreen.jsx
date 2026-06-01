@@ -1,6 +1,10 @@
 import { Download, ShieldCheck } from "lucide-react";
 
-export function TakeHomeScreen({ generated, previous }) {
+export function TakeHomeScreen({ generated, demoStatus, previous }) {
+  const connectorUrl = generated?.config_snippet?.mcpServers
+    ? Object.values(generated.config_snippet.mcpServers)[0]?.url
+    : "";
+
   return (
     <div>
       <div className="screen-heading">
@@ -18,6 +22,7 @@ export function TakeHomeScreen({ generated, previous }) {
             MCP config
           </div>
           <pre>{JSON.stringify(generated?.config_snippet || {}, null, 2)}</pre>
+          {connectorUrl && <p className="muted">Connector URL: {connectorUrl}</p>}
         </div>
         <div className="panel">
           <div className="panel-title">
@@ -32,6 +37,19 @@ export function TakeHomeScreen({ generated, previous }) {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      <div className="panel runtime-panel">
+        <div className="panel-title">
+          <ShieldCheck size={18} />
+          Runtime status
+        </div>
+        <div className="runtime-grid">
+          <div><span>Trust</span><strong>{demoStatus?.trustMode || "deterministic"}</strong></div>
+          <div><span>Chat</span><strong>{demoStatus?.chatMode || "deterministic"}</strong></div>
+          <div><span>Tools</span><strong>{demoStatus?.toolExecution || "mock"}</strong></div>
+          <div><span>Backend</span><strong>{demoStatus?.backend || "ready"}</strong></div>
         </div>
       </div>
     </div>

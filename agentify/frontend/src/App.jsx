@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PasteScreen } from "./screens/PasteScreen.jsx";
 import { ActionsScreen } from "./screens/ActionsScreen.jsx";
 import { GenerateScreen } from "./screens/GenerateScreen.jsx";
 import { TryItScreen } from "./screens/TryItScreen.jsx";
 import { TakeHomeScreen } from "./screens/TakeHomeScreen.jsx";
 import { sampleSpec } from "./fixtures";
+import { getDemoStatus } from "./api";
 
 const steps = ["Paste", "Actions", "Generate", "Try it", "Take home"];
 
@@ -14,6 +15,11 @@ export default function App() {
   const [parsedApi, setParsedApi] = useState(null);
   const [generated, setGenerated] = useState(null);
   const [chatResult, setChatResult] = useState(null);
+  const [demoStatus, setDemoStatus] = useState(null);
+
+  useEffect(() => {
+    getDemoStatus().then(setDemoStatus);
+  }, []);
 
   const screenProps = useMemo(
     () => ({
@@ -25,11 +31,12 @@ export default function App() {
       setGenerated,
       chatResult,
       setChatResult,
+      demoStatus,
       next: () => setStep((current) => Math.min(current + 1, steps.length - 1)),
       previous: () => setStep((current) => Math.max(current - 1, 0)),
       goTo: setStep
     }),
-    [spec, parsedApi, generated, chatResult]
+    [spec, parsedApi, generated, chatResult, demoStatus]
   );
 
   return (
@@ -39,7 +46,14 @@ export default function App() {
           <p className="eyebrow">Agentify + Valiron</p>
           <h1>Trust-gated MCP connector builder</h1>
         </div>
-        <div className="trust-pill">Valiron enabled</div>
+        <div className="status-stack">
+          <div className="trust-pill">Valiron enabled</div>
+          {demoStatus && (
+            <div className="mode-pill">
+              {demoStatus.trustMode} trust · {demoStatus.chatMode} chat · {demoStatus.toolExecution} tools
+            </div>
+          )}
+        </div>
       </header>
 
       <nav className="stepper" aria-label="Build steps">
