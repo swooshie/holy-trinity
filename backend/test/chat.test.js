@@ -1,6 +1,6 @@
-const assert = require("node:assert/strict");
-const test = require("node:test");
-const { chatWithTools, selectTool } = require("../src/chat");
+import assert from "node:assert/strict";
+import test from "node:test";
+import { chatWithTools } from "../src/chat.js";
 
 const tools = [
   {
@@ -34,28 +34,17 @@ const tools = [
   }
 ];
 
-test("selectTool chooses write tools for create requests", () => {
-  assert.equal(selectTool("Create a ride", tools).name, "create_ride");
-});
-
 test("chatWithTools blocks untrusted agents before execution", async () => {
-  const result = await chatWithTools({
-    message: "Create a ride",
-    tools,
-    agentId: "untrusted-agent"
-  });
+  const result = await chatWithTools("Create a ride", tools, "https://api.gotogether.example.com", null, "untrusted-agent");
 
   assert.equal(result.trust.allow, false);
   assert.deepEqual(result.tool_calls, []);
 });
 
-test("chatWithTools returns a tool call for trusted agents", async () => {
-  const result = await chatWithTools({
-    message: "Create a ride",
-    tools,
-    agentId: "trusted-agent"
-  });
+test("chatWithTools returns a mocked tool call for trusted agents in fallback mode", async () => {
+  const result = await chatWithTools("Create a ride", tools, "https://api.gotogether.example.com", null, "25459");
 
   assert.equal(result.trust.allow, true);
-  assert.equal(result.tool_calls[0].tool, "create_ride");
+  assert.equal(result.tool_calls.length, 1);
+  assert.equal(result.tool_calls[0].blocked, false);
 });

@@ -1,8 +1,12 @@
-const fs = require("fs");
-const path = require("path");
-const { stableActionId } = require("./parser");
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { stableActionId } from "./parser.js";
 
-function generateServer(parsedApi, apiKey) {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export function generateServer(parsedApi, apiKey) {
   if (!parsedApi?.actions?.length) {
     throw Object.assign(new Error("Parsed API with actions is required"), { statusCode: 400 });
   }
@@ -43,7 +47,7 @@ function generateServer(parsedApi, apiKey) {
   };
 }
 
-function actionToTool(action) {
+export function actionToTool(action) {
   const properties = {};
   const required = [];
 
@@ -83,8 +87,8 @@ function generatedPackage(serverName) {
     },
     dependencies: {
       "@modelcontextprotocol/sdk": "^1.6.0",
-      "@valiron/sdk": "^0.1.0",
-      express: "^4.18.3",
+      "@valiron/sdk": "^0.4.0",
+      express: "^4.21.2",
       zod: "^3.23.8"
     }
   };
@@ -246,8 +250,3 @@ async function executeAction(action, input) {
 }
 `;
 }
-
-module.exports = {
-  generateServer,
-  actionToTool
-};

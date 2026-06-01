@@ -1,11 +1,13 @@
-# Backend (Person B Scope)
+# Agentify + Valiron Backend
 
-This backend implements Saloni's scope:
+This is the canonical backend for the integrated app.
 
 - route wiring in `server.js`
 - trust helper in `src/trust.js`
 - chat proxy in `src/chat.js`
 - fixture fallback contracts in `src/fixtures.js`
+- OpenAPI parser in `src/parser.js`
+- trust-gated MCP generator in `src/generator.js`
 
 ## 1) Install
 
@@ -102,12 +104,26 @@ Returns `reply`, `tool_calls`, and `trust`.
 ## 5) Integration behavior
 
 - If `DEMO_FALLBACK_MODE=true`, parse/generate/trust/chat use deterministic fixture behavior.
-- If `DEMO_FALLBACK_MODE=false`, server attempts real imports from:
-  - `src/parser.js` (`parseSpec`)
-  - `src/generator.js` (`generateServer`)
+- If `DEMO_FALLBACK_MODE=false`, `/api/parse` uses `src/parser.js` and `/api/generate` uses `src/generator.js`.
 - Trust helper uses real Valiron SDK only in non-fallback mode.
+- Tool API execution is mocked in fallback mode and live in non-fallback mode.
 
-## 6) Notes
+## 6) Checks
+
+```bash
+npm run check
+npm test
+```
+
+Real parser/generator smoke test:
+
+```bash
+DEMO_FALLBACK_MODE=false npm run dev
+```
+
+Then post `../specs/gotogether.openapi.json` to `/api/parse` and pass that response to `/api/generate`.
+
+## 7) Notes
 
 - Every error path returns JSON with an `error` field.
 - `chatWithTools()` performs preflight trust and per-tool trust checks.

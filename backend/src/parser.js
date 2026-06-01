@@ -1,5 +1,8 @@
-const HTTP_METHODS = ["get", "post", "put", "patch", "delete"];
-const DEFAULT_THRESHOLDS = {
+import SwaggerParser from "@apidevtools/swagger-parser";
+
+export const HTTP_METHODS = ["get", "post", "put", "patch", "delete"];
+
+export const DEFAULT_THRESHOLDS = {
   GET: 45,
   POST: 65,
   PUT: 65,
@@ -7,7 +10,7 @@ const DEFAULT_THRESHOLDS = {
   DELETE: 85
 };
 
-async function parseSpec(input) {
+export async function parseSpec(input) {
   const rawSpec = normalizeInput(input);
   const spec = await dereferenceSpec(rawSpec);
 
@@ -67,12 +70,8 @@ function normalizeInput(input) {
 
 async function dereferenceSpec(spec) {
   try {
-    const SwaggerParser = require("@apidevtools/swagger-parser");
-    return SwaggerParser.dereference(spec);
+    return await SwaggerParser.dereference(spec);
   } catch (error) {
-    if (error.code === "MODULE_NOT_FOUND") {
-      return spec;
-    }
     throw Object.assign(new Error(`OpenAPI dereference failed: ${error.message}`), { statusCode: 400 });
   }
 }
@@ -131,7 +130,7 @@ function schemaType(schema = {}) {
   return "string";
 }
 
-function stableActionId(value) {
+export function stableActionId(value) {
   return String(value)
     .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
     .replace(/[^a-zA-Z0-9]+/g, "_")
@@ -146,9 +145,3 @@ function humanize(value) {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 }
-
-module.exports = {
-  parseSpec,
-  stableActionId,
-  DEFAULT_THRESHOLDS
-};

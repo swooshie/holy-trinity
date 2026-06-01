@@ -1,8 +1,11 @@
-const assert = require("node:assert/strict");
-const test = require("node:test");
+import assert from "node:assert/strict";
+import { createRequire } from "node:module";
+import test from "node:test";
+import { parseSpec } from "../src/parser.js";
+import { generateServer } from "../src/generator.js";
+
+const require = createRequire(import.meta.url);
 const spec = require("../../specs/gotogether.openapi.json");
-const { parseSpec } = require("../src/parser");
-const { generateServer } = require("../src/generator");
 
 test("generateServer preserves edited thresholds and omits disabled actions", async () => {
   const parsed = await parseSpec(spec);

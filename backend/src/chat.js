@@ -1,5 +1,13 @@
 import { checkTrust } from "./trust.js";
 
+function isTruthy(value) {
+  return value === "1" || value === "true" || value === "yes";
+}
+
+function fallbackMode() {
+  return isTruthy((process.env.DEMO_FALLBACK_MODE || "true").toLowerCase());
+}
+
 function buildApiUrl(baseUrl, endpoint, input) {
   let path = endpoint;
 
@@ -34,6 +42,17 @@ async function callToolApi(tool, input, baseUrl, apiKey, agentId) {
 
   if (!endpoint) {
     throw new Error(`Tool ${tool.name} is missing endpoint/path`);
+  }
+
+  if (fallbackMode()) {
+    return {
+      ok: true,
+      mocked: true,
+      tool: tool.name,
+      method,
+      endpoint,
+      input
+    };
   }
 
   const url = new URL(buildApiUrl(baseUrl, endpoint, input));

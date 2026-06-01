@@ -12,6 +12,7 @@ coverage/
 
 ## Agentify generated artifacts
 agentify/backend/generated/
+backend/generated/
 
 ## Environment / secrets
 .env

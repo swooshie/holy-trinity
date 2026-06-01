@@ -2,31 +2,53 @@ export const TRUSTED_AGENT_IDS = ["25459", "trusted-demo", "trusted-agent"];
 
 export const parsedFixture = {
   api_name: "GoTogether",
-  api_description: "Example API",
-  base_url: "https://api.example.com",
+  api_description: "Example ride coordination API for the Agentify + Valiron demo.",
+  base_url: "https://api.gotogether.example.com",
   actions: [
     {
-      id: "list_tasks",
-      name: "List tasks",
-      description: "List all tasks",
+      id: "list_rides",
+      name: "List rides",
+      description: "List available rides.",
       method: "GET",
-      path: "/tasks",
-      parameters: [],
+      path: "/rides",
+      parameters: [
+        {
+          name: "city",
+          type: "string",
+          required: false,
+          description: "City to search for rides in.",
+          in: "query"
+        }
+      ],
       enabled: true,
       trustThreshold: 45
     },
     {
-      id: "create_task",
-      name: "Create task",
-      description: "Create a task",
+      id: "create_ride",
+      name: "Create ride",
+      description: "Create a new ride listing.",
       method: "POST",
-      path: "/tasks",
+      path: "/rides",
       parameters: [
         {
-          name: "title",
+          name: "origin",
           type: "string",
           required: true,
-          description: "Task title",
+          description: "Ride origin.",
+          in: "body"
+        },
+        {
+          name: "destination",
+          type: "string",
+          required: true,
+          description: "Ride destination.",
+          in: "body"
+        },
+        {
+          name: "seats",
+          type: "number",
+          required: true,
+          description: "Number of seats available.",
           in: "body"
         }
       ],
@@ -34,17 +56,17 @@ export const parsedFixture = {
       trustThreshold: 65
     },
     {
-      id: "delete_task",
-      name: "Delete task",
-      description: "Delete a task",
+      id: "delete_ride",
+      name: "Delete ride",
+      description: "Delete a ride listing.",
       method: "DELETE",
-      path: "/tasks/{id}",
+      path: "/rides/{rideId}",
       parameters: [
         {
-          name: "id",
+          name: "rideId",
           type: "string",
           required: true,
-          description: "Task id",
+          description: "Ride identifier.",
           in: "path"
         }
       ],
@@ -59,49 +81,62 @@ export const generatedFixture = {
   server_code: "// generated server omitted in fixture mode",
   tools: [
     {
-      name: "list_tasks",
-      description: "List all tasks",
-      endpoint: "/tasks",
+      name: "list_rides",
+      description: "List available rides.",
+      endpoint: "/rides",
       method: "GET",
       trustThreshold: 45,
       input_schema: {
         type: "object",
-        properties: {},
+        properties: {
+          city: {
+            type: "string",
+            description: "City to search for rides in."
+          }
+        },
         required: []
       }
     },
     {
-      name: "create_task",
-      description: "Create a task",
-      endpoint: "/tasks",
+      name: "create_ride",
+      description: "Create a new ride listing.",
+      endpoint: "/rides",
       method: "POST",
       trustThreshold: 65,
       input_schema: {
         type: "object",
         properties: {
-          title: {
+          origin: {
             type: "string",
-            description: "Task title"
+            description: "Ride origin."
+          },
+          destination: {
+            type: "string",
+            description: "Ride destination."
+          },
+          seats: {
+            type: "number",
+            description: "Number of seats available."
           }
         },
-        required: ["title"]
+        required: ["origin", "destination", "seats"]
       }
     },
     {
-      name: "delete_task",
-      description: "Delete a task",
-      endpoint: "/tasks/{id}",
+      name: "delete_ride",
+      description: "Delete a ride listing.",
+      endpoint: "/rides/{rideId}",
       method: "DELETE",
       trustThreshold: 85,
       input_schema: {
         type: "object",
         properties: {
-          id: {
+          rideId: {
             type: "string",
-            description: "Task id"
+            description: "Ride identifier."
           }
         },
-        required: ["id"]
+        required: ["rideId"]
       }
     }
   ],
@@ -114,18 +149,18 @@ export const generatedFixture = {
   },
   trust_config: [
     {
-      tool: "list_tasks",
-      name: "List tasks",
+      tool: "list_rides",
+      name: "List rides",
       minScore: 45
     },
     {
-      tool: "create_task",
-      name: "Create task",
+      tool: "create_ride",
+      name: "Create ride",
       minScore: 65
     },
     {
-      tool: "delete_task",
-      name: "Delete task",
+      tool: "delete_ride",
+      name: "Delete ride",
       minScore: 85
     }
   ]
