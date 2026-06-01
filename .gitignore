@@ -1,2 +1,5 @@
 *.docx
 Agentify-Valiron-Execution-Plan.md
+node_modules/
+dist/
+agentify/backend/generated/
