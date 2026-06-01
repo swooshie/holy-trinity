@@ -37,7 +37,34 @@ app.get("/health", (_req, res) => {
     ok: true,
     service: "agentify-valiron-backend",
     trustGated: true,
-    fixtureMode: process.env.AGENTIFY_FIXTURE_MODE === "true"
+    fixtureMode: process.env.AGENTIFY_FIXTURE_MODE === "true",
+    trustMode: process.env.AGENTIFY_TRUST_MODE === "live" ? "live" : "deterministic",
+    chatMode: process.env.AGENTIFY_CHAT_MODE === "live" && Boolean(process.env.ANTHROPIC_API_KEY) ? "live" : "deterministic",
+    toolExecution: process.env.AGENTIFY_EXECUTE_TOOLS === "true" ? "live" : "mock"
+  });
+});
+
+app.get("/api/demo-status", (_req, res) => {
+  const trustMode = process.env.AGENTIFY_TRUST_MODE === "live" ? "live" : "deterministic";
+  const chatMode = process.env.AGENTIFY_CHAT_MODE === "live" && Boolean(process.env.ANTHROPIC_API_KEY) ? "live" : "deterministic";
+
+  res.json({
+    ok: true,
+    backend: "ready",
+    apiBaseUrl: `http://localhost:${port}`,
+    trustGated: true,
+    fixtureMode: process.env.AGENTIFY_FIXTURE_MODE === "true",
+    trustMode,
+    chatMode,
+    toolExecution: process.env.AGENTIFY_EXECUTE_TOOLS === "true" ? "live" : "mock",
+    demoAgents: {
+      trusted: process.env.DEMO_TRUSTED_AGENT_ID || "trusted-agent",
+      untrusted: process.env.DEMO_UNTRUSTED_AGENT_ID || "untrusted-agent"
+    },
+    missingKeys: {
+      valiron: trustMode === "live" && !process.env.VALIRON_API_KEY,
+      anthropic: process.env.AGENTIFY_CHAT_MODE === "live" && !process.env.ANTHROPIC_API_KEY
+    }
   });
 });
 

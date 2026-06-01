@@ -7,7 +7,8 @@
     "dev": "node --watch server.js",
     "start": "node server.js",
     "check": "node --check server.js && node --check src/parser.js && node --check src/generator.js && node --check src/trust.js && node --check src/chat.js && node --check src/fixtures.js",
-    "test": "node --test"
+    "test": "node --test",
+    "smoke": "node scripts/smoke.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
