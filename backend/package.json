@@ -1,0 +1,18 @@
+{
+  "name": "agentify-valiron-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "check": "node --check server.js && node --check src/trust.js && node --check src/chat.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.54.0",
+    "@valiron/sdk": "^0.4.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  }
+}
